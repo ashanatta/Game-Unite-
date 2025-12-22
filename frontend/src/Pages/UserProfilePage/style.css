@@ -1,0 +1,113 @@
+.overflow-x {
+  overflow: hidden;
+}
+
+.profile-pattern {
+  background-image: url("../../assets/Images/sl_0210121_40570_53.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  margin: 0 auto 150px auto;
+  width: 100%;
+  height: 40vh;
+  border-radius: 12px;
+  position: relative;
+}
+
+.profile-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 100%;
+  background-image: url("../../assets/Images/poki.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: aquamarine;
+  position: absolute;
+  top: 80%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.user-name-container {
+  position: absolute;
+  top: calc(80% + 100px + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.user-name-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.user-name {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #212529;
+  line-height: 1.2;
+}
+
+.message-icon-button {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.message-icon-button:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.message-icon-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.message-icon-button svg {
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .user-name-container {
+    top: 110%;
+  }
+  
+  .message-icon-button {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .message-icon-button svg {
+    font-size: 18px;
+  }
+  
+  .user-name-wrapper {
+    gap: 10px;
+  }
+}
+

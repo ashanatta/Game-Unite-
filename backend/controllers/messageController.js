@@ -7,38 +7,70 @@ import User from "../models/userModel.js";
 // @route   POST /api/messages/conversations
 // @access  Private
 const createOrGetConversation = asyncHandle(async (req, res) => {
-  const { sellerId, productId } = req.body;
-  const userId = req.user._id;
+  const { sellerId, userId: targetUserId, productId } = req.body;
+  const currentUserId = req.user._id;
+  const currentUser = await User.findById(currentUserId);
 
-  // Validate that the target user is a seller
-  const seller = await User.findById(sellerId);
-  if (!seller || !seller.isSeller) {
+  let targetUserId_final;
+  let buyerId;
+  let sellerId_final;
+
+  // Determine buyer and seller based on who is making the request
+  if (sellerId) {
+    // Regular user wants to chat with a seller
+    const seller = await User.findById(sellerId);
+    if (!seller || !seller.isSeller) {
+      res.status(400);
+      throw new Error("Invalid seller ID or user is not a seller");
+    }
+    buyerId = currentUserId;
+    sellerId_final = sellerId;
+    targetUserId_final = sellerId;
+  } else if (targetUserId) {
+    // Seller wants to chat with a buyer/user
+    if (!currentUser.isSeller) {
+      res.status(400);
+      throw new Error("Only sellers can initiate conversations with buyers");
+    }
+    const buyer = await User.findById(targetUserId);
+    if (!buyer || buyer.isSeller) {
+      res.status(400);
+      throw new Error("Invalid buyer ID or user is a seller");
+    }
+    buyerId = targetUserId;
+    sellerId_final = currentUserId;
+    targetUserId_final = targetUserId;
+  } else {
     res.status(400);
-    throw new Error("Invalid seller ID or user is not a seller");
+    throw new Error("Either sellerId or userId must be provided");
   }
 
   // Prevent users from messaging themselves
-  if (userId.toString() === sellerId) {
+  if (currentUserId.toString() === targetUserId_final.toString()) {
     res.status(400);
     throw new Error("Cannot create conversation with yourself");
   }
 
-  // Check if conversation already exists
+  // Check if conversation already exists (check both directions)
   let conversation = await Conversation.findOne({
-    user: userId,
-    seller: sellerId,
-  }).populate("user", "name email").populate("seller", "name email");
+    $or: [
+      { user: buyerId, seller: sellerId_final },
+      { user: sellerId_final, seller: buyerId },
+    ],
+  })
+    .populate("user", "name email")
+    .populate("seller", "name email");
 
   // If conversation doesn't exist, create it
   if (!conversation) {
     conversation = await Conversation.create({
-      participants: [userId, sellerId],
-      user: userId,
-      seller: sellerId,
+      participants: [buyerId, sellerId_final],
+      user: buyerId,
+      seller: sellerId_final,
       product: productId || null,
       unreadCount: new Map([
-        [userId.toString(), 0],
-        [sellerId.toString(), 0],
+        [buyerId.toString(), 0],
+        [sellerId_final.toString(), 0],
       ]),
     });
 
@@ -275,6 +307,21 @@ const getSellers = asyncHandle(async (req, res) => {
   res.status(200).json(sellers);
 });
 
+// @desc    Get list of buyers/users (for sellers to start a new conversation)
+// @route   GET /api/messages/buyers
+// @access  Private
+const getBuyers = asyncHandle(async (req, res) => {
+  const buyers = await User.find({ 
+    isSeller: false, 
+    isAdmin: false,
+    _id: { $ne: req.user._id } // Exclude current user
+  })
+    .select("name email")
+    .sort({ name: 1 });
+
+  res.status(200).json(buyers);
+});
+
 export {
   createOrGetConversation,
   getConversations,
@@ -282,5 +329,6 @@ export {
   sendMessage,
   getMessages,
   getSellers,
+  getBuyers,
 };
 

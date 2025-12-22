@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ListGroup, Form, Button, Badge, InputGroup } from "react-bootstrap";
-import { FaSearch, FaPlus, FaTimes } from "react-icons/fa";
+import { ListGroup, Form, Button, Badge, InputGroup, Modal } from "react-bootstrap";
+import { FaPlus, FaSearch } from "react-icons/fa";
 import Loader from "../Loader";
 import Message from "../Message";
 import { getErrorMessage } from "../../utils/errorUtils";
@@ -20,6 +20,7 @@ const ChatList = ({
   onStartNewChat,
   creatingConversation,
   currentUserId,
+  isUserSeller = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -42,10 +43,10 @@ const ChatList = ({
     return content.length > 50 ? content.substring(0, 50) + "..." : content;
   };
 
-  const filteredSellers = sellers.filter(
-    (seller) =>
-      seller.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      seller.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPeople = sellers.filter(
+    (person) =>
+      person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      person.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -72,22 +73,27 @@ const ChatList = ({
         <Button
           variant="primary"
           size="sm"
-          onClick={() => setShowNewChat(!showNewChat)}
+          onClick={() => setShowNewChat(true)}
+          className="new-chat-button"
         >
-          {showNewChat ? <FaTimes /> : <FaPlus />}
+          <FaPlus style={{ fontSize: '14px', marginRight: '4px' }} />
+          New Chat
         </Button>
       </div>
 
-      {/* New Chat Section */}
-      {showNewChat && (
-        <div className="new-chat-section">
-          <InputGroup className="mb-2">
+      {/* New Chat Modal */}
+      <Modal show={showNewChat} onHide={() => setShowNewChat(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>New Chat with {isUserSeller ? "Buyer" : "Seller"}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <InputGroup className="mb-3">
             <InputGroup.Text>
-              <FaSearch />
+              <FaSearch style={{ fontSize: '16px' }} />
             </InputGroup.Text>
             <Form.Control
               type="text"
-              placeholder="Search sellers..."
+              placeholder={`Search ${isUserSeller ? "buyers" : "sellers"}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -98,22 +104,24 @@ const ChatList = ({
           ) : errorSellers ? (
             <Message variant="danger">{getErrorMessage(errorSellers)}</Message>
           ) : (
-            <div className="sellers-list">
-              {filteredSellers.length === 0 ? (
-                <p className="text-muted text-center p-2">No sellers found</p>
+            <div className="sellers-list-modal">
+              {filteredPeople.length === 0 ? (
+                <p className="text-muted text-center p-2">
+                  No {isUserSeller ? "buyers" : "sellers"} found
+                </p>
               ) : (
-                filteredSellers.map((seller) => (
+                filteredPeople.map((person) => (
                   <div
-                    key={seller._id}
+                    key={person._id}
                     className="seller-item"
-                    onClick={() => onStartNewChat(seller._id)}
+                    onClick={() => onStartNewChat(person._id)}
                   >
                     <div className="seller-avatar">
-                      {seller.name.charAt(0).toUpperCase()}
+                      {person.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="seller-info">
-                      <div className="seller-name">{seller.name}</div>
-                      <div className="seller-email">{seller.email}</div>
+                      <div className="seller-name">{person.name}</div>
+                      <div className="seller-email">{person.email}</div>
                     </div>
                     {creatingConversation && (
                       <div className="loading-spinner">Loading...</div>
@@ -123,8 +131,8 @@ const ChatList = ({
               )}
             </div>
           )}
-        </div>
-      )}
+        </Modal.Body>
+      </Modal>
 
       {/* Conversations List */}
       <div className="conversations-list">

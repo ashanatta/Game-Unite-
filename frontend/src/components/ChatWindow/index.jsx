@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Form, Button, Container } from "react-bootstrap";
-import { FaPaperPlane } from "react-icons/fa";
 import {
   useGetMessagesQuery,
   useSendMessageMutation,
@@ -240,7 +239,7 @@ const ChatWindow = ({ conversation, currentUserId, onConversationUpdate }) => {
               disabled={!messageText.trim() || sendingMessage}
               className="send-button"
             >
-              <FaPaperPlane />
+              Send
             </Button>
           </Form.Group>
         </Form>

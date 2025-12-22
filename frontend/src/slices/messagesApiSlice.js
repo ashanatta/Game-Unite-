@@ -53,6 +53,13 @@ export const messagesApiSlice = apiSlice.injectEndpoints({
       }),
       keepUnusedDataFor: 5,
     }),
+    // Get list of buyers/users
+    getBuyers: builder.query({
+      query: () => ({
+        url: `${MESSAGES_URL}/buyers`,
+      }),
+      keepUnusedDataFor: 5,
+    }),
   }),
 });
 
@@ -63,5 +70,6 @@ export const {
   useGetMessagesQuery,
   useSendMessageMutation,
   useGetSellersQuery,
+  useGetBuyersQuery,
 } = messagesApiSlice;
 

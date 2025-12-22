@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import {
   useGetConversationsQuery,
   useGetSellersQuery,
+  useGetBuyersQuery,
   useCreateOrGetConversationMutation,
   useGetConversationByIdQuery,
 } from "../../slices/messagesApiSlice";
@@ -26,11 +27,24 @@ const MessagesScreen = () => {
     refetch: refetchConversations,
   } = useGetConversationsQuery();
 
+  const isUserSeller = userInfo?.isSeller;
+
+  // Fetch sellers if user is not a seller, fetch buyers if user is a seller
   const {
     data: sellers,
     isLoading: loadingSellers,
     error: errorSellers,
-  } = useGetSellersQuery();
+  } = useGetSellersQuery(undefined, {
+    skip: isUserSeller,
+  });
+
+  const {
+    data: buyers,
+    isLoading: loadingBuyers,
+    error: errorBuyers,
+  } = useGetBuyersQuery(undefined, {
+    skip: !isUserSeller,
+  });
 
   const [createOrGetConversation, { isLoading: creatingConversation }] =
     useCreateOrGetConversationMutation();
@@ -42,9 +56,11 @@ const MessagesScreen = () => {
     setShowNewChat(false);
   };
 
-  const handleStartNewChat = async (sellerId) => {
+  const handleStartNewChat = async (targetId) => {
     try {
-      const result = await createOrGetConversation({ sellerId }).unwrap();
+      // If user is seller, pass userId. If user is regular, pass sellerId
+      const data = isUserSeller ? { userId: targetId } : { sellerId: targetId };
+      const result = await createOrGetConversation(data).unwrap();
       setSelectedConversation(result);
       setShowNewChat(false);
       refetchConversations();
@@ -64,14 +80,15 @@ const MessagesScreen = () => {
             error={errorConversations}
             selectedConversation={selectedConversation}
             onSelectConversation={handleSelectConversation}
-            sellers={sellers || []}
-            loadingSellers={loadingSellers}
-            errorSellers={errorSellers}
+            sellers={isUserSeller ? (buyers || []) : (sellers || [])}
+            loadingSellers={isUserSeller ? loadingBuyers : loadingSellers}
+            errorSellers={isUserSeller ? errorBuyers : errorSellers}
             showNewChat={showNewChat}
             setShowNewChat={setShowNewChat}
             onStartNewChat={handleStartNewChat}
             creatingConversation={creatingConversation}
             currentUserId={userInfo?._id}
+            isUserSeller={isUserSeller}
           />
         </Col>
 
@@ -87,7 +104,7 @@ const MessagesScreen = () => {
             <div className="no-chat-selected">
               <div className="text-center">
                 <h3>Select a conversation to start messaging</h3>
-                <p>Or start a new chat with a seller</p>
+                <p>Or start a new chat with {isUserSeller ? "a buyer" : "a seller"}</p>
               </div>
             </div>
           )}

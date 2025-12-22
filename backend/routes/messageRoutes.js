@@ -6,6 +6,7 @@ import {
   sendMessage,
   getMessages,
   getSellers,
+  getBuyers,
 } from "../controllers/messageController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -16,6 +17,9 @@ router.use(protect);
 
 // Get list of sellers
 router.get("/sellers", getSellers);
+
+// Get list of buyers/users
+router.get("/buyers", getBuyers);
 
 // Conversation routes
 router

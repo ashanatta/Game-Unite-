@@ -8,6 +8,7 @@
   align-items: center;
   justify-content: flex-start;
   color: white;
+  position: relative;
 }
 
 .slider__head {
@@ -55,4 +56,117 @@
 .slider__section .heading h1,
 .slider__section .heading p {
   animation: slideIn 2s ease-out forwards;
+}
+
+.messages-icon-link {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background-color: #007bff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+  z-index: 10;
+}
+
+.messages-icon-link:hover {
+  background-color: #0056b3;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.6);
+}
+
+.messages-icon {
+  font-size: 28px;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .messages-icon-link {
+    width: 50px;
+    height: 50px;
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .messages-icon {
+    font-size: 24px;
+  }
+}
+
+/* Modal Styles */
+.sellers-list-modal {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.seller-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.seller-item:hover {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.seller-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.seller-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.seller-name {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 2px;
+}
+
+.seller-email {
+  font-size: 0.85rem;
+  color: #6c757d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sellers-list-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sellers-list-modal::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.sellers-list-modal::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.sellers-list-modal::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
