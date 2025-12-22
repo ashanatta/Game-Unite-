@@ -117,16 +117,16 @@ const BlogEditScreen = () => {
               <Form.Group controlId="image" className="my-2">
                 <Form.Label>Image</Form.Label>
                 <Form.Control
-                  type="text"
-                  placeholder="Enter image url"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                ></Form.Control>
-                <Form.Control
                   label="Choose File"
                   onChange={uploadFileHandler}
                   type="file"
+                  accept="image/*"
                 ></Form.Control>
+                {image && (
+                  <Form.Text className="text-muted">
+                    Current image: {image}
+                  </Form.Text>
+                )}
                 {loadingUpload && <Loader />}
               </Form.Group>
 
