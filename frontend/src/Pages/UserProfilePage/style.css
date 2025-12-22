@@ -32,21 +32,19 @@
 .user-name-container {
   position: absolute;
   top: calc(80% + 100px + 10px);
-  left: 50%;
+  left: 48%;
   transform: translateX(-50%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
+  width: auto;
   text-align: center;
 }
 
 .user-name-wrapper {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 12px;
   justify-content: center;
   flex-wrap: nowrap;
+  margin: 0 auto;
 }
 
 .user-name {
