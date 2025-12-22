@@ -10,3 +10,4 @@ export const BLOGS_URL = "/api/blogs";
 export const ORDERS_URL = "/api/orders";
 export const Stripe_URL = "/api/config/stripe";
 export const UPLOAD_URL = "/api/upload";
+export const MESSAGES_URL = "/api/messages";

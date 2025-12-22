@@ -35,6 +35,7 @@ import PlaceOrderScreen from "./Pages/PlaceOrderScreen/index.jsx";
 import OrderScreen from "./Pages/OrderScreen/index.jsx";
 import ProfileScreen from "./Pages/ProfileScreen/index.jsx";
 import SettingPage from "./Pages/SettingPage/index.jsx";
+import MessagesScreen from "./Pages/MessagesScreen/index.jsx";
 
 import AdminRoute from "./components/AdminRoute/index.jsx";
 import ProductListScreen from "./Pages/Admin/ProductListScreen/index.jsx";
@@ -89,6 +90,7 @@ const router = createBrowserRouter(
         <Route path="/order/:id" element={<OrderScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/Setting" element={<SettingPage />} />
+        <Route path="/messages" element={<MessagesScreen />} />
       </Route>
 
       <Route path="/" element={<AdminRoute />}>

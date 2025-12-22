@@ -10,6 +10,7 @@ import userRoutes from "./routes/userRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 import cors from "cors";
 import Stripe from "stripe";
 // import helmet from "helmet";
@@ -36,6 +37,7 @@ app.use("/api/blogs", blogRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.post("/api/create-checkout-session", async (req, res) => {
   const { products, orderId } = req.body;
