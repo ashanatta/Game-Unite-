@@ -21,6 +21,7 @@ import Account from "../Account";
 import fire from "../../assets/Images/fire.gif";
 
 import sound from "../../assets/Sound/mu1.mp3";
+import "./header.css";
 
 const Header = () => {
   const { cartItems } = useSelector((state) => state.cart);
@@ -70,38 +71,24 @@ const Header = () => {
   return (
     <header>
       <Navbar
-        style={{
-          backgroundColor: "#0F0C29",
-          height: "80px",
-        }}
+        className="navbar-custom"
         variant="dark"
         expand="xl"
         collapseOnSelect
       >
         <Container>
           <LinkContainer to="/">
-            <Navbar.Brand>
+            <Navbar.Brand className="navbar-brand-custom">
               <span onClick={play}>GameUnite</span>
               <Image
                 src={fire}
                 alt="fire logo"
-                style={{
-                  width: "32px",
-                  marginLeft: "5px",
-                  marginBottom: "8px",
-                }}
+                className="brand-fire-icon"
               />
             </Navbar.Brand>
           </LinkContainer>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse
-            id="basic-navbar-nav"
-            style={{
-              backgroundColor: "#0F0C29",
-              zIndex: "99",
-              padding: "0 7px",
-            }}
-          >
+          <Navbar.Collapse id="basic-navbar-nav">
             <Nav>
               <LinkContainer to="/">
                 <Nav.Link>Home</Nav.Link>
@@ -120,13 +107,15 @@ const Header = () => {
               </LinkContainer>
             </Nav>
             <Nav>
-              <SearchBox />
+              <div className="search-box-container">
+                <SearchBox />
+              </div>
 
-              <LinkContainer to="/cart" style={{ marginTop: "8px" }}>
-                <Nav.Link>
-                  <FaShoppingCart /> Card
+              <LinkContainer to="/cart">
+                <Nav.Link className="cart-link">
+                  <FaShoppingCart /> Cart
                   {cartItems.length > 0 && (
-                    <Badge pill bg="success" style={{ marginLeft: "5px" }}>
+                    <Badge pill bg="success">
                       {cartItems.reduce((a, c) => a + c.qty, 0)}
                     </Badge>
                   )}
@@ -137,7 +126,6 @@ const Header = () => {
                 <NavDropdown
                   title={userInfo.name}
                   id="username"
-                  style={{ marginTop: "8px" }}
                 >
                   <LinkContainer to="/profile">
                     <NavDropdown.Item>Profile</NavDropdown.Item>
@@ -150,8 +138,8 @@ const Header = () => {
                   </NavDropdown.Item>
                 </NavDropdown>
               ) : (
-                <LinkContainer to="/login" style={{ marginTop: "8px" }}>
-                  <Nav.Link href="/login">
+                <LinkContainer to="/login">
+                  <Nav.Link href="/login" className="sign-in-link">
                     <FaUser /> Sign In
                   </Nav.Link>
                 </LinkContainer>
@@ -160,7 +148,6 @@ const Header = () => {
                 <NavDropdown
                   title="Admin"
                   id="adminMenu"
-                  style={{ marginTop: "8px" }}
                 >
                   <LinkContainer to="/admin/productlist">
                     <NavDropdown.Item>Products</NavDropdown.Item>
@@ -181,7 +168,6 @@ const Header = () => {
                 <NavDropdown
                   title="Seller"
                   id="sellerMenu"
-                  style={{ marginTop: "8px" }}
                 >
                   <LinkContainer to="/seller/productlist">
                     <NavDropdown.Item>Products</NavDropdown.Item>
@@ -191,7 +177,7 @@ const Header = () => {
                   </LinkContainer>
                 </NavDropdown>
               )}
-              <Nav.Link>
+              <Nav.Link className="account-nav-link">
                 <Account accounts={accounts} connect={connect} />
               </Nav.Link>
             </Nav>
