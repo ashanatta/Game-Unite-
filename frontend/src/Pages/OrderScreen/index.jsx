@@ -10,13 +10,11 @@ import {
   useGetOrderDetailsQuery,
   useDeliverOrderMutation,
   usePayOrderMutation,
+  useGetStripClientIdQuery,
 } from "../../slices/ordersApiSlice";
 import FormContainer from "../../components/FormContainer";
 import { loadStripe } from "@stripe/stripe-js";
 import { getErrorMessage } from "../../utils/errorUtils";
-
-const STRIPE_PUBLIC_KEY =
-  "pk_test_51PcmDVJgX0ysL3FLKE6roebxz9VbhwJumQBO2oGTEOAQuBA56sqSUlZ6jxWXFDMcsaXm4vauqeIeCtlr4FM3LpVU00iffFr7FU";
 
 const OrderScreen = () => {
   const { id: orderId } = useParams();
@@ -26,6 +24,9 @@ const OrderScreen = () => {
     error,
     refetch,
   } = useGetOrderDetailsQuery(orderId);
+
+  // Fetch Stripe public key from backend to ensure it matches the secret key
+  const { data: stripeConfig, isLoading: isLoadingStripeKey, error: stripeKeyError } = useGetStripClientIdQuery();
 
   const [payOrder, { isLoading: loadingPay }] = usePayOrderMutation();
   const [deliverOrder, { isLoading: loadingDeliver }] =
@@ -97,15 +98,56 @@ const OrderScreen = () => {
   };
 
   const makePayment = async () => {
-    const stripe = await loadStripe(STRIPE_PUBLIC_KEY);
+    // Get Stripe public key from backend to ensure it matches the secret key
+    if (isLoadingStripeKey) {
+      toast.info("Loading payment configuration...");
+      return;
+    }
+
+    if (stripeKeyError || !stripeConfig?.publishableKey) {
+      toast.error("Stripe configuration not available. Please check your server configuration.");
+      console.error("Stripe public key error:", stripeKeyError);
+      console.error("Stripe config:", stripeConfig);
+      return;
+    }
+
+    const stripe = await loadStripe(stripeConfig.publishableKey);
 
     if (!order || !order.orderItems || !Array.isArray(order.orderItems)) {
       toast.error("Missing or invalid order data");
       return;
     }
 
+    // Debug: Log the order structure to see what we're working with
+    console.log("Full order object:", order);
+    console.log("Order items:", order.orderItems);
+    console.log("First order item keys:", order.orderItems[0] ? Object.keys(order.orderItems[0]) : "No items");
+
+    // Validate and map orderItems to ensure they have all required fields
+    const products = order.orderItems.map((item, index) => {
+      console.log(`Processing item ${index}:`, item);
+      
+      // Check if price exists (including 0 as valid)
+      if (item.price === undefined || item.price === null) {
+        console.error("Order item missing price:", item);
+        toast.error(`Product "${item.name}" is missing price information`);
+        return null;
+      }
+      
+      return {
+        name: item.name,
+        price: Number(item.price), // Ensure it's a number
+        qty: item.qty,
+      };
+    }).filter(Boolean); // Remove any null items
+
+    if (products.length === 0) {
+      toast.error("No valid products to process");
+      return;
+    }
+
     const body = {
-      products: order.orderItems,
+      products: products,
       orderId: order._id,
     };
 
@@ -114,6 +156,8 @@ const OrderScreen = () => {
     };
 
     try {
+      console.log("Sending request to create checkout session:", body);
+      
       const response = await fetch(
         "http://localhost:5000/api/create-checkout-session",
         {
@@ -123,20 +167,40 @@ const OrderScreen = () => {
         }
       );
 
-      const session = await response.json();
+      console.log("Response status:", response.status, response.statusText);
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ 
+          error: `Server error: ${response.status} ${response.statusText}` 
+        }));
+        console.error("Checkout session error:", errorData);
+        toast.error(errorData.error || "Failed to create checkout session");
+        return;
+      }
+
+      const session = await response.json();
+      console.log("Checkout session created:", session);
+
+      if (!session || !session.id) {
+        toast.error("Invalid response from server");
+        console.error("Invalid session data:", session);
+        return;
+      }
+
+      console.log("Redirecting to Stripe checkout with session:", session.id);
       const result = await stripe.redirectToCheckout({
         sessionId: session.id,
       });
 
       if (result.error) {
+        console.error("Stripe redirect error:", result.error);
         toast.error(result.error.message);
       } else {
         toast.success("Redirecting to checkout...");
       }
     } catch (error) {
-      toast.error("Error during payment process");
-      console.error("Error during payment:", error);
+      console.error("Error during payment process:", error);
+      toast.error(`Error during payment process: ${error.message}`);
     }
   };
 

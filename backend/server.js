@@ -15,7 +15,32 @@ import cors from "cors";
 import Stripe from "stripe";
 // import helmet from "helmet";
 
+// Validate Stripe keys
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error("❌ Error: STRIPE_SECRET_KEY is not defined in environment variables");
+  console.error("Please create a .env file in the backend directory with STRIPE_SECRET_KEY");
+  process.exit(1);
+}
+
+if (!process.env.STRIPE_PUBLIC_KEY) {
+  console.error("❌ Error: STRIPE_PUBLIC_KEY is not defined in environment variables");
+  console.error("Please add STRIPE_PUBLIC_KEY to your .env file");
+  console.error("Example: STRIPE_PUBLIC_KEY=pk_test_...");
+  process.exit(1);
+}
+
+// Validate that keys are from the same account
+const secretKeyPrefix = process.env.STRIPE_SECRET_KEY.substring(7, 20); // After "sk_test_"
+const publicKeyPrefix = process.env.STRIPE_PUBLIC_KEY.substring(7, 20); // After "pk_test_"
+if (secretKeyPrefix !== publicKeyPrefix) {
+  console.warn("⚠️  Warning: Stripe key prefixes don't match!");
+  console.warn(`   Secret key prefix: ${secretKeyPrefix}`);
+  console.warn(`   Public key prefix: ${publicKeyPrefix}`);
+  console.warn("   Make sure both keys are from the same Stripe account!");
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+console.log("✅ Stripe initialized successfully");
 
 const port = process.env.PORT || 5000;
 
@@ -25,7 +50,11 @@ const __dirname = path.resolve();
 const uploadsPath = path.join(__dirname, "uploads");
 
 const app = express();
-app.use(cors({ origin: "http://127.0.0.1:3000" }));
+// Allow both localhost and 127.0.0.1 for CORS
+app.use(cors({ 
+  origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+  credentials: true 
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -39,38 +68,84 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/messages", messageRoutes);
 
+// Stripe public key endpoint - serves the public key from environment variable
+app.get("/api/config/stripe", (req, res) => {
+  if (!process.env.STRIPE_PUBLIC_KEY) {
+    return res.status(500).json({ error: "Stripe public key not configured" });
+  }
+  res.json({ publishableKey: process.env.STRIPE_PUBLIC_KEY });
+});
+
 app.post("/api/create-checkout-session", async (req, res) => {
+  console.log("📥 Received checkout session request");
   const { products, orderId } = req.body;
 
   if (!products || !Array.isArray(products)) {
-    console.error("Invalid request: Missing or invalid products data");
-    return res.status(400).json({ error: "Invalid request" });
+    console.error("❌ Invalid request: Missing or invalid products data");
+    return res.status(400).json({ error: "Invalid request: Missing or invalid products data" });
+  }
+
+  if (!orderId) {
+    console.error("❌ Invalid request: Missing orderId");
+    return res.status(400).json({ error: "Invalid request: Missing orderId" });
+  }
+
+  // Validate that all products have required fields
+  for (const product of products) {
+    if (!product.name || product.price === undefined || product.price === null || !product.qty) {
+      console.error("Invalid product data:", JSON.stringify(product, null, 2));
+      return res.status(400).json({ 
+        error: "Invalid product data: Each product must have name, price, and qty",
+        received: product
+      });
+    }
+    
+    // Validate price is a valid number
+    if (isNaN(product.price) || product.price <= 0) {
+      console.error("Invalid price:", product.price);
+      return res.status(400).json({ 
+        error: `Invalid price for product "${product.name}": ${product.price}. Price must be a positive number.`
+      });
+    }
   }
 
   try {
-    const lineItems = products.map((product) => ({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: product.name,
+    console.log("✅ Creating line items for products:", products);
+    const lineItems = products.map((product) => {
+      const unitAmount = Math.round(product.price * 100);
+      console.log(`  - ${product.name}: $${product.price} x ${product.qty} = ${unitAmount} cents`);
+      return {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: product.name,
+          },
+          unit_amount: unitAmount,
         },
-        unit_amount: product.price * 100,
-      },
-      quantity: product.qty,
-    }));
+        quantity: product.qty,
+      };
+    });
 
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    console.log(`🌐 Creating Stripe checkout session for order ${orderId}`);
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
-      success_url: `http://127.0.0.1:3000/order/${orderId}?payment_status=paid&order_id=${orderId}`,
-      cancel_url: `http://127.0.0.1:3000/order/${orderId}?payment_status=cancelled&order_id=${orderId}`,
+      success_url: `${frontendUrl}/order/${orderId}?payment_status=paid&order_id=${orderId}`,
+      cancel_url: `${frontendUrl}/order/${orderId}?payment_status=cancelled&order_id=${orderId}`,
     });
 
+    console.log("✅ Checkout session created successfully:", session.id);
     res.json({ id: session.id });
   } catch (error) {
     console.error("Error creating checkout session:", error);
-    res.status(500).json({ error: "Failed to create checkout session" });
+    const errorMessage = error.message || "Failed to create checkout session";
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === "development" ? error.stack : undefined
+    });
   }
 });
 
