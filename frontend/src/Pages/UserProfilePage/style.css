@@ -25,18 +25,20 @@
   background-color: aquamarine;
   position: absolute;
   top: 80%;
-  left: 50%;
+  left: 85%;
   transform: translateX(-50%);
 }
 
 .user-name-container {
   position: absolute;
   top: calc(80% + 100px + 10px);
-  left: 48%;
+  left: 83%;
   transform: translateX(-50%);
   width: auto;
   text-align: center;
 }
+
+
 
 .user-name-wrapper {
   display: flex;
