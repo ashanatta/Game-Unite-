@@ -44,13 +44,23 @@ const CartScreen = () => {
             </Message>
           ) : (
             <ListGroup variant="flush">
+              <ListGroup.Item>
+                <Row>
+                  <Col md={2}><strong>Image</strong></Col>
+                  <Col md={2}><strong>Product</strong></Col>
+                  <Col md={2}><strong>Price</strong></Col>
+                  <Col md={2}><strong>Quantity</strong></Col>
+                  <Col md={2}><strong>Total</strong></Col>
+                  <Col md={2}><strong>Action</strong></Col>
+                </Row>
+              </ListGroup.Item>
               {cartItems.map((item) => (
                 <ListGroup.Item key={item._id}>
                   <Row>
                     <Col md={2}>
                       <Image src={item.image} alt={item.name} fluid rounded />
                     </Col>
-                    <Col md={3}>
+                    <Col md={2}>
                       <Link to={`/product/${item._id}`}>{item.name}</Link>
                     </Col>
                     <Col md={2}>${item.price}</Col>
@@ -69,6 +79,9 @@ const CartScreen = () => {
                           </option>
                         ))}
                       </Form.Control>
+                    </Col>
+                    <Col md={2}>
+                      <strong>${(item.price * item.qty).toFixed(2)}</strong>
                     </Col>
                     <Col md={2}>
                       <Button

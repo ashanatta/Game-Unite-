@@ -150,6 +150,15 @@ const ProductScreen = () => {
                     </ListGroup.Item>
                   )}
 
+                  {product.countInStock > 0 && (
+                    <ListGroup.Item>
+                      <Row>
+                        <Col><strong>Total: </strong></Col>
+                        <Col><strong>${(product.price * qty).toFixed(2)}</strong></Col>
+                      </Row>
+                    </ListGroup.Item>
+                  )}
+
                   <ListGroup.Item>
                     <Button
                       className="btn-block"
