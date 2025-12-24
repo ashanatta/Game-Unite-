@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 
 import Order from "../models/orderModel.js";
+import Genre from "../models/genreModel.js";
 
 //@desc create new order
 //@route POST /api/orders
@@ -17,9 +18,24 @@ const addOrderItems = asyncHandler(async (req, res) => {
   } = req.body;
 
   if (orderItems && orderItems.length === 0) {
-    res.send(400);
+    res.status(400);
     throw new Error("no order items");
   } else {
+    // Validate stock availability before creating order
+    for (const item of orderItems) {
+      const product = await Genre.findById(item._id);
+      if (!product) {
+        res.status(404);
+        throw new Error(`Product not found: ${item.name || item._id}`);
+      }
+      if (product.countInStock < item.qty) {
+        res.status(400);
+        throw new Error(
+          `Insufficient stock for ${product.name}. Available: ${product.countInStock}, Requested: ${item.qty}`
+        );
+      }
+    }
+
     const order = new Order({
       orderItems: orderItems.map((x) => ({
         ...x,
@@ -79,6 +95,23 @@ const updateOrderToPaid = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
 
   if (order) {
+    // Deduct inventory for each product in the order
+    for (const item of order.orderItems) {
+      const product = await Genre.findById(item.product);
+      if (product) {
+        // Check if enough stock is available
+        if (product.countInStock < item.qty) {
+          res.status(400);
+          throw new Error(
+            `Insufficient stock for ${product.name}. Available: ${product.countInStock}, Requested: ${item.qty}`
+          );
+        }
+        // Deduct the quantity from stock
+        product.countInStock -= item.qty;
+        await product.save();
+      }
+    }
+
     order.isPaid = true;
     order.paidAt = Date.now();
     order.paymentResult = {
