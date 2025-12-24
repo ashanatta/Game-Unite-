@@ -49,6 +49,8 @@ import SellerRoute from "./components/SellerRoute/index.jsx";
 import SproductListScreen from "./Pages/Seller/SproductListScreen/index.jsx";
 import SproductEditScreen from "./Pages/Seller/SproductEditScreen/index.jsx";
 import SorderListScreen from "./Pages/Seller/SorderListScreen/index.jsx";
+import SblogListScreen from "./Pages/Seller/SblogListScreen/index.jsx";
+import SblogEditScreen from "./Pages/Seller/SblogEditScreen/index.jsx";
 import UserProfilePage from "./Pages/UserProfilePage/index.jsx";
 
 // import { loadStripe } from "@stripe/stripe-js";
@@ -118,6 +120,8 @@ const router = createBrowserRouter(
           path="/seller/product/:id/edit"
           element={<SproductEditScreen />}
         />
+        <Route path="/seller/bloglist" element={<SblogListScreen />} />
+        <Route path="/seller/blog/:id/edit" element={<SblogEditScreen />} />
         <Route path="/seller/orderlist" element={<SorderListScreen />} />
       </Route>
     </Route>

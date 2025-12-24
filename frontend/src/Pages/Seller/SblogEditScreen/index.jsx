@@ -14,12 +14,11 @@ import { getErrorMessage } from "../../../utils/errorUtils";
 import JoditEditor from "jodit-react";
 import { BASE_URL, UPLOAD_URL } from "../../../constants";
 
-const BlogEditScreen = () => {
+const SblogEditScreen = () => {
   const { id: blogId } = useParams();
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
   const [category, setCategory] = useState("");
-  // const [description, setDescription] = useState("");
   const editor = useRef(null);
   const [content, setContent] = useState("");
   const {
@@ -39,11 +38,8 @@ const BlogEditScreen = () => {
   useEffect(() => {
     if (blog) {
       setName(blog.name);
-
-      // setDescription(blog.description);
       setContent(blog.description);
       setImage(blog.image);
-
       // Handle category as array or string
       setCategory(Array.isArray(blog.category) ? blog.category[0] : blog.category);
     }
@@ -113,7 +109,7 @@ const BlogEditScreen = () => {
       const result = await updateBlog(updateBlogs).unwrap();
 
       toast.success("Blog updated successfully");
-      navigate("/admin/bloglist");
+      navigate("/seller/bloglist");
       refetch();
     } catch (error) {
       console.error("Error updating blog:", error);
@@ -136,7 +132,7 @@ const BlogEditScreen = () => {
   return (
     <>
       <Container>
-        <Link to="/admin/bloglist" className="btn btn-light my-3">
+        <Link to="/seller/bloglist" className="btn btn-light my-3">
           Go Back
         </Link>
         <FormContainer>
@@ -175,16 +171,6 @@ const BlogEditScreen = () => {
                 {loadingUpload && <Loader />}
               </Form.Group>
 
-              {/* <Form.Group controlId="category" className="my-2">
-                <Form.Label>Category</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                />
-              </Form.Group> */}
-
               <Form.Group controlId="category" className="my-2">
                 <Form.Label>Category</Form.Label>
                 <Form.Control
@@ -202,12 +188,6 @@ const BlogEditScreen = () => {
 
               <Form.Group controlId="description" className="my-2">
                 <Form.Label>Description</Form.Label>
-                {/* <Form.Control
-                  type="text"
-                  placeholder="Enter description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                /> */}
                 <JoditEditor
                   ref={editor}
                   value={content}
@@ -262,4 +242,5 @@ const BlogEditScreen = () => {
   );
 };
 
-export default BlogEditScreen;
+export default SblogEditScreen;
+
