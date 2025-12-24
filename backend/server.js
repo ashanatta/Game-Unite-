@@ -11,6 +11,7 @@ import blogRoutes from "./routes/blogRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 import cors from "cors";
 import Stripe from "stripe";
 // import helmet from "helmet";
@@ -68,6 +69,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Stripe public key endpoint - serves the public key from environment variable
 app.get("/api/config/stripe", (req, res) => {
