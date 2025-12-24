@@ -15,6 +15,7 @@ const getBlog = asyncHandler(async (req, res) => {
 
   const count = await Blog.countDocuments({ ...keyword });
   const blogs = await Blog.find({ ...keyword })
+    .populate("user", "name email _id")
     .limit(pageSize)
     .skip(pageSize * (page - 1));
   res.json({ blogs, page, pages: Math.ceil(count / pageSize) });
@@ -24,7 +25,7 @@ const getBlog = asyncHandler(async (req, res) => {
 //@route GET /api/products/:id
 //@access public
 const getBlogById = asyncHandler(async (req, res) => {
-  const blog = await Blog.findById(req.params.id);
+  const blog = await Blog.findById(req.params.id).populate("user", "name email _id");
   if (blog) {
     return res.json(blog);
   } else {
@@ -35,17 +36,15 @@ const getBlogById = asyncHandler(async (req, res) => {
 
 //@desc Create a Genres
 //@route POST /api/products
-//@access Private/Admin
+//@access Private/Admin/Seller
 const createBlogs = asyncHandler(async (req, res) => {
   const blog = new Blog({
     name: "Sample name",
     user: req.user._id,
     image: "/images/attacks.jpg",
-    category: "Other",
+    category: ["Other"], // Fix: category should be an array
     description: "Sample description",
   });
-
-  // console.log(product.price);
 
   const createdBlog = await blog.save();
 
@@ -54,39 +53,55 @@ const createBlogs = asyncHandler(async (req, res) => {
 
 //@desc update a genre
 //@route PUT /api/products/:id
-//@access private/admin
+//@access private/admin/seller
 const updateBlog = asyncHandler(async (req, res) => {
   const { name, description, image, category } = req.body;
 
-  const blog = await Blog.findById(req.params.id);
+  const blog = await Blog.findById(req.params.id).populate("user", "_id");
 
-  if (blog) {
-    blog.name = name;
-    blog.description = description;
-    blog.image = image;
-    blog.category = category;
-
-    const updatedBlog = await blog.save();
-    res.json(updatedBlog);
-  } else {
+  if (!blog) {
     res.status(404);
-    throw new Error("Resource not found ");
+    throw new Error("Blog not found");
   }
+
+  // Check if user is admin or the blog owner
+  if (!req.user.isAdmin && blog.user._id.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error("Not authorized to update this blog");
+  }
+
+  // Update fields
+  if (name !== undefined) blog.name = name;
+  if (description !== undefined) blog.description = description;
+  if (image !== undefined) blog.image = image;
+  if (category !== undefined) {
+    // Ensure category is an array
+    blog.category = Array.isArray(category) ? category : [category];
+  }
+
+  const updatedBlog = await blog.save();
+  res.status(200).json(updatedBlog);
 });
 
 //@desc delete a genre
 //@route DELETE /api/products/:id
-//@access private/admin
+//@access private/admin/seller
 const deleteBlog = asyncHandler(async (req, res) => {
-  const blog = await Blog.findById(req.params.id);
+  const blog = await Blog.findById(req.params.id).populate("user", "_id");
 
-  if (blog) {
-    await blog.deleteOne({ _id: blog._id });
-    res.status(200).json({ message: "Blog delete" });
-  } else {
+  if (!blog) {
     res.status(404);
-    throw new Error("Resource not found ");
+    throw new Error("Blog not found");
   }
+
+  // Check if user is admin or the blog owner
+  if (!req.user.isAdmin && blog.user._id.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error("Not authorized to delete this blog");
+  }
+
+  await blog.deleteOne({ _id: blog._id });
+  res.status(200).json({ message: "Blog deleted successfully" });
 });
 
 // @desc    Create new review

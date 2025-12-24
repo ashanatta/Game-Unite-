@@ -9,14 +9,14 @@ import {
   deleteBlog,
   createBlogReview,
 } from "../controllers/blogController.js";
-import { protect, admin } from "../middleware/authMiddleware.js";
+import { protect, admin, adminSeller } from "../middleware/authMiddleware.js";
 
-router.route("/").get(getBlog).post(protect, admin, createBlogs);
+router.route("/").get(getBlog).post(protect, adminSeller, createBlogs);
 router
   .route("/:id")
   .get(getBlogById)
-  .put(protect, admin, updateBlog)
-  .delete(protect, admin, deleteBlog);
+  .put(protect, adminSeller, updateBlog)
+  .delete(protect, adminSeller, deleteBlog);
 
 router.route("/:id/reviews").post(protect, createBlogReview);
 
