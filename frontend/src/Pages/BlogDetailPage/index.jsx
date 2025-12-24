@@ -10,7 +10,9 @@ import {
   ListGroup,
   Button,
   Container,
+  Badge,
 } from "react-bootstrap";
+import { FaArrowLeft } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import Meta from "../../components/Meta/Meta";
 import Loader from "../../components/Loader";
@@ -24,6 +26,7 @@ import {
 import { toast } from "react-toastify";
 import BlogContent from "../../components/BlogContent";
 import { getErrorMessage } from "../../utils/errorUtils";
+import "./blogDetail.css";
 
 const BlogScreen = () => {
   const { id: blogId } = useParams();
@@ -39,8 +42,6 @@ const BlogScreen = () => {
     refetch,
   } = useGetBlogDetailsQuery(blogId);
 
-  // console.log(blog);
-
   const [createBlogReview, { isLoading: loadingBlogReview }] =
     useCreateBlogReviewMutation();
 
@@ -53,92 +54,163 @@ const BlogScreen = () => {
         comment,
       }).unwrap();
       refetch();
-      toast.success("Review submitted");
+      toast.success("Comment submitted successfully!");
       setComment("");
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   return (
     <>
-      <Container>
-        <Link to="/blog" className="btn btn-light my-3">
-          Go Back
-        </Link>
+      <Container className="blog-detail-container">
+        <div className="blog-back-button">
+          <Link to="/blog" className="btn-back">
+            <FaArrowLeft /> Back to Blogs
+          </Link>
+        </div>
 
         {isLoading ? (
           <Loader />
         ) : error ? (
-          <Message variant="danger">
-            {getErrorMessage(error)}
-          </Message>
+          <Message variant="danger">{getErrorMessage(error)}</Message>
         ) : (
           <>
             <Meta title={blog.name} />
-            <Row>
-              <Col md={12}>
-                <Image src={blog.image} alt={blog.name} fluid />
-              </Col>
-              <Col md={12}>
-                <ListGroup variant="flush">
-                  <ListGroup.Item bg="center">
-                    <h3>{blog.name}</h3>
-                  </ListGroup.Item>
+            
+            {/* Blog Header Section */}
+            <Card className="blog-header-card">
+              <div className="blog-image-wrapper">
+                <Image 
+                  src={blog.image} 
+                  alt={blog.name} 
+                  className="blog-main-image"
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
+              <Card.Body className="blog-header-content">
+                <div className="blog-title-section">
+                  <h1 className="blog-title">{blog.name}</h1>
+                  {blog.category && blog.category.length > 0 && (
+                    <div className="blog-categories">
+                      {Array.isArray(blog.category) ? (
+                        blog.category.map((cat, idx) => (
+                          <Badge key={idx} bg="primary" className="category-badge">
+                            {cat}
+                          </Badge>
+                        ))
+                      ) : (
+                        <Badge bg="primary" className="category-badge">
+                          {blog.category}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
 
-                  <ListGroup.Item>
-                    Description: <BlogContent content={blog.description} />
-                  </ListGroup.Item>
-                </ListGroup>
-              </Col>
-            </Row>
-            <Row className="review">
-              <Col md={6}>
-                <h2>Comments</h2>
-                {blog.reviews.length === 0 && <Message>No Comments</Message>}
-                <ListGroup variant="flush">
-                  {blog.reviews.map((review) => (
-                    <ListGroup.Item key={review._id}>
-                      <strong style={{ color: "#000" }}>{review.name}</strong>
-                      <p>{review.createdAt.substring(0, 10)}</p>
-                      <p>{review.comment}</p>
-                    </ListGroup.Item>
-                  ))}
-                  <ListGroup.Item>
-                    <h2 style={{ color: "#000" }}>Write a Comment</h2>
+            {/* Blog Content Section */}
+            <Card className="blog-content-card">
+              <Card.Body>
+                <h2 className="content-title">Article Content</h2>
+                <div className="blog-description">
+                  <BlogContent content={blog.description} />
+                </div>
+              </Card.Body>
+            </Card>
+
+            {/* Comments Section */}
+            <Card className="blog-comments-card">
+              <Card.Body>
+                <div className="comments-header">
+                  <h2 className="comments-title">
+                    Comments ({blog.reviews?.length || 0})
+                  </h2>
+                </div>
+
+                {blog.reviews && blog.reviews.length === 0 ? (
+                  <Message className="no-comments-message">
+                    No comments yet. Be the first to share your thoughts!
+                  </Message>
+                ) : (
+                  <div className="comments-list">
+                    {blog.reviews?.map((review) => (
+                      <Card key={review._id} className="comment-card">
+                        <Card.Body>
+                          <div className="comment-header">
+                            <div className="comment-author">
+                              <div className="author-avatar">
+                                {review.name?.charAt(0).toUpperCase() || "U"}
+                              </div>
+                              <div className="author-info">
+                                <strong className="author-name">
+                                  {review.name || "Anonymous"}
+                                </strong>
+                                <span className="comment-date">
+                                  {formatDate(review.createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="comment-text">
+                            {review.comment}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {/* Comment Form */}
+                <Card className="comment-form-card">
+                  <Card.Body>
+                    <h3 className="comment-form-title">Write a Comment</h3>
 
                     {loadingBlogReview && <Loader />}
 
                     {userInfo ? (
-                      <Form onSubmit={submitHandler}>
-                        <Form.Group className="my-2" controlId="comment">
-                          <Form.Label>Comment</Form.Label>
+                      <Form onSubmit={submitHandler} className="comment-form">
+                        <Form.Group className="mb-3" controlId="comment">
+                          <Form.Label>Your Comment</Form.Label>
                           <Form.Control
                             as="textarea"
-                            row="3"
+                            rows={4}
                             required
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                          ></Form.Control>
+                            placeholder="Share your thoughts about this article..."
+                            className="comment-textarea"
+                          />
                         </Form.Group>
                         <Button
                           disabled={loadingBlogReview}
                           type="submit"
                           variant="primary"
+                          className="submit-comment-btn"
                         >
-                          Submit
+                          {loadingBlogReview ? "Submitting..." : "Submit Comment"}
                         </Button>
                       </Form>
                     ) : (
-                      <Message>
-                        Please <Link to="/login">sign in</Link> to write a
-                        review
+                      <Message className="login-prompt">
+                        Please <Link to="/login">sign in</Link> to write a comment
                       </Message>
                     )}
-                  </ListGroup.Item>
-                </ListGroup>
-              </Col>
-            </Row>
+                  </Card.Body>
+                </Card>
+              </Card.Body>
+            </Card>
           </>
         )}
       </Container>
